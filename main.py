@@ -14,7 +14,7 @@ from trainer import Trainer
 from config import get_args
 from lr_scheduler import get_sch
 from utils import seed_everything, handle_unhandled_exception, save_to_json
-from pruning_utils import pruning_model, pruning_model_structured, check_sparsity
+from pruning_utils import pruning_model, pruning_model_structured, prune_model_custom, check_sparsity, extract_mask, remove_prune
 
 if __name__ == "__main__":
     args = get_args()
@@ -40,33 +40,52 @@ if __name__ == "__main__":
 
     train_dataset = Subset(dataset, train_index)
     valid_dataset = Subset(dataset_no_augment, valid_index)
-
-    model = resnet18(num_classes=100).to(device) #make model based on the model name and args
-
-    if args.prune_type == 'structured':
-        pruning_model_structured(model, args.pruning_ratio)
-    else:
-        pruning_model(model, args.pruning_ratio)
-    check_sparsity(model)
+    test_dataset = Cifar100(args.path, train=False, augment=False, download=False)
 
     loss_fn = nn.CrossEntropyLoss()
+    train_loader = DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, 
+    )
+    valid_loader = DataLoader(
+        valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, 
+    )
+    test_loader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
+    )
+    
+    model = resnet18(num_classes=100).to(device) #make model based on the model name and args
+    torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
+
+    print('Dense model Training')
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
-    train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, #pin_memory=True
-    )
-    valid_loader = DataLoader(
-        valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, #pin_memory=True
-    )
-    
     trainer = Trainer(
         train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
-    trainer.train() #start training
+    trainer.train()
+    trainer.test(test_loader) 
 
-    test_dataset = Cifar100(args.path, train=False, augment=False, download=False)
-    test_loader = DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
-    ) #make test data loader
+    print('Sparse model Training')
+    if args.pruning_ratio != 0.0:
+        check_sparsity(model)
+        if args.prune_type == 'structured':
+            pruning_model_structured(model, args.pruning_ratio)
+        else:
+            pruning_model(model, args.pruning_ratio)
 
+        check_sparsity(model)
+        current_mask = extract_mask(model.state_dict())
+        remove_prune(model)
+
+        initialization = torch.load(os.path.join(result_path, 'init.pt'))
+        model.load_state_dict(initialization)
+        prune_model_custom(model, current_mask)
+        check_sparsity(model)
+
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+
+    trainer = Trainer(
+        train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
+    trainer.train()
     trainer.test(test_loader) 
