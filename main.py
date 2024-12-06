@@ -64,7 +64,7 @@ if __name__ == "__main__":
         train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
     trainer.train() #start training
 
-    test_dataset = Cifar100()
+    test_dataset = Cifar100(args.path, train=False, augment=False, download=False)
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     ) #make test data loader
