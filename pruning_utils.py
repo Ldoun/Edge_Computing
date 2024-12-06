@@ -36,7 +36,7 @@ def pruning_model(model, px):
 
 
 def pruning_model_structured(model, px):
-    print("Apply Structured L1 Pruning Globally (all conv layers)")
+    print("Apply Structured L1 Pruning Locally (all conv layers)")
     # parameters_to_prune =[]
     for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
