@@ -1,38 +1,28 @@
+import os
+import numpy as np
+
 import torch
-from torch.utils.data import  Dataset
+from torch.utils.data import  Dataset, Subset
+import torchvision.transforms as transforms
+from torchvision.datasets import CIFAR10, CIFAR100, Food101, StanfordCars, Flowers102
 
-
-def load_data(file):
-    pass #data loading func
-
-class DataSet(Dataset):
-    def __init__(self, file_list, label=None):
-        self.file_list = file_list
-        self.label = label
-
-    def __len__(self):
-        return len(self.file_list)
-    
-    def __getitem__(self, index):
-        if self.label is None:
-            return {'data' : torch.tensor(load_data(self.file_list[index]), dtype=torch.float)}
+class Cifar100(CIFAR100):
+    def __init__(self, root, train=False, augment=False, download=False) -> None:
+        if augment:
+            transform = transforms.Compose([
+                    transforms.RandomResizedCrop(size=(224, 224)),
+                    transforms.RandomHorizontalFlip(p=0.5),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]) 
         else:
-            return {'data' : torch.tensor(load_data(self.file_list[index]), dtype=torch.float), 
-                    'label' : torch.tensor(load_data(self.label[index]), dtype=torch.float)}
-        
-class Preload_DataSet(Dataset):
-    def __init__(self, file_list, label=None):
-        self.file_list = file_list
-        self.label = label
-
-        self.data = torch.stack([load_data[file] for file in file_list])
-
-    def __len__(self):
-        return len(self.file_list)
-    
-    def __getitem__(self, index):
-        if self.label is None:
-            return {'data' : self.data[index]}
-        else:
-            return {'data' : self.data[index], 
-                    'label' : torch.tensor(load_data(self.label[index]), dtype=torch.float)}
+            transform = transforms.Compose([
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        super().__init__(root, train, transform, None, download)
+        self.data = np.array(self.data)
+        self.targets = np.array(self.targets)
+        self.num_classes = 100
