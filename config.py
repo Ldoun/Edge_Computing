@@ -9,7 +9,7 @@ def args_for_train(parser):
     parser.add_argument('--batch_size', type=int, default=128, help='batch_size')
     parser.add_argument('--epochs', type=int, default=200, help='max epochs')
     parser.add_argument('--patience', type=int, default=-1, help='patience for early stopping')    
-    parser.add_argument('--lr', type=float, default=0.1, help='learning rate for the optimizer')
+    parser.add_argument('--lr', type=float, default=0.01, help='learning rate for the optimizer')
     parser.add_argument('--scheduler', type=str, default='cosine')
     parser.add_argument('--warmup_epochs', type=int, default=-1, help='number of warmup epoch of lr scheduler')
 
