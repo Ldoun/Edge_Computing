@@ -89,5 +89,5 @@ class Trainer():
                 correct += sum(output.argmax(dim=1) == y).item() # classification task
 
 
-        print(f'Loss: {total_loss/len(self.test_loader.dataset)}')
-        print(f'Acc: {correct/len(self.test_loader.dataset)}')
+        print(f'Loss: {total_loss/len(test_loader.dataset)}')
+        print(f'Acc: {correct/len(test_loader.dataset)}')
