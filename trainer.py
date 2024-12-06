@@ -44,8 +44,8 @@ class Trainer():
 
         total_loss = 0
         correct = 0
-        for batch in tqdm(self.train_loader, file=sys.stdout): #tqdm output will not be written to logger file(will only written to stdout)
-            x, y = batch['data'].to(self.device), batch['label'].to(self.device)
+        for x, y in tqdm(self.train_loader, file=sys.stdout): #tqdm output will not be written to logger file(will only written to stdout)
+            x, y = x.to(self.device), y.to(self.device)
 
             self.optimizer.zero_grad()
             output = self.model(x)            
@@ -63,8 +63,8 @@ class Trainer():
         with torch.no_grad():
             total_loss = 0
             correct = 0
-            for batch in self.valid_loader:
-                x, y = batch['data'].to(self.device), batch['label'].to(self.device)
+            for x, y in self.valid_loader:
+                x, y = x.to(self.device), y.to(self.device)
 
                 output = self.model(x)
                 loss = self.loss_fn(output, y)
@@ -78,10 +78,16 @@ class Trainer():
         self.model.load_state_dict(torch.load(self.best_model_path))
         self.model.eval()
         with torch.no_grad():
-            result = []
-            for batch in test_loader:
-                x = batch['data'].to(self.device)
-                output = self.model(x).detach().cpu().numpy()
-                result.append(output)
+            total_loss = 0
+            correct = 0
+            for x, y in test_loader:
+                x, y = x.to(self.device), y.to(self.device)
+                output = self.model(x)
+                loss = self.loss_fn(output, y)
 
-        return np.concatenate(result,axis=0)
+                total_loss += loss.item() * x.shape[0]
+                correct += sum(output.argmax(dim=1) == y).item() # classification task
+
+
+        print(f'Loss: {total_loss/len(self.test_loader.dataset)}')
+        print(f'Acc: {correct/len(self.test_loader.dataset)}')
