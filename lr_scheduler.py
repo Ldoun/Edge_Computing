@@ -30,5 +30,7 @@ def get_sch(scheduler, optimizer, **kwargs):
         return base(optimizer)
     elif scheduler=='warmup':
         return Warmup(optimizer, num_annealing_steps=kwargs['warmup_epochs'], num_total_steps=kwargs['warmup_epochs'],)
+    elif scheduler=='cosine':
+        return sch.CosineAnnealingLR(optimizer, T_max=kwargs['epochs'])
     else:
         NotImplementedError(f'{scheduler} not implemented')
