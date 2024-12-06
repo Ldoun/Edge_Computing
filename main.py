@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-import pandas as pd
 from functools import partial
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
@@ -10,7 +9,6 @@ from torch import optim, nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-from models import Temp
 from data import Cifar100, Subset
 from trainer import Trainer
 from config import get_args

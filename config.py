@@ -21,7 +21,6 @@ def args_for_pruning(parser):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', default=42, type=int)
-    parser.add_argument('--model', default='?', type=str)
 
     args_for_data(parser)
     args_for_train(parser)
