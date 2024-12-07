@@ -6,6 +6,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 import torch
 from torch import optim, nn
+import torch.ao.quantization
 from torch.utils.data import DataLoader
 # from torchvision.models import resnet18
 from torchvision.models.quantization import resnet18
@@ -81,7 +82,7 @@ if __name__ == "__main__":
             scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
             # model.qconfig = torch.ao.quantization.default_qconfig
-            model.qconfig = torch.ao.quantization.get_default_qconfig('x86') # per-channel quantization
+            model.qconfig = torch.ao.quantization.get_default_qat_qconfig('x86') # per-channel quantization
             torch.ao.quantization.prepare_qat(model, inplace=True)
 
             trainer = Trainer(
