@@ -7,14 +7,14 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
+# from torchvision.models import resnet18
+from torchvision.models.quantization import resnet18
 
 from data import Cifar100, Subset
 from trainer import Trainer
 from config import get_args
 from lr_scheduler import get_sch
-from utils import seed_everything, handle_unhandled_exception, save_to_json
-from pruning_utils import pruning_model, pruning_model_structured, prune_model_custom, check_sparsity, extract_mask, remove_prune
+from utils import seed_everything, handle_unhandled_exception, save_to_json, print_size_of_model
 
 if __name__ == "__main__":
     args = get_args()
@@ -56,41 +56,59 @@ if __name__ == "__main__":
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
     
-    model = resnet18(num_classes=100).to(device) #make model based on the model name and args
-    torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
+    model = resnet18(num_classes=100).to(device)
 
-    if args.pruning_ratio == 0.0:
+    if args.train_dense:
         logger.info('Dense model Training')
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
         scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
         trainer = Trainer(
-            train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
+            train_loader, valid_loader, model, False, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
         trainer.train()
         trainer.test(test_loader) 
 
     else:
-        logger.info('Sparse model Training')
         model = model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
-        check_sparsity(model, logger)
-        if args.prune_type == 'structured':
-            pruning_model_structured(model, args.pruning_ratio, logger)
+        model.eval()
+        model.fuse_model()
+
+        
+        if args.is_qat:
+            logger.info('Quantization aware training')
+
+            optimizer = optim.Adam(model.parameters(), lr=args.lr)
+            scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+
+            # model.qconfig = torch.ao.quantization.default_qconfig
+            model.qconfig = torch.ao.quantization.get_default_qconfig('x86') # per-channel quantization
+            torch.ao.quantization.prepare_qat(model, inplace=True)
+
+            trainer = Trainer(
+                train_loader, valid_loader, model, True, loss_fn, optimizer, scheduler, device, args.patience, 10, result_path, logger)
+            trainer.train()
+
+            model = torch.ao.quantization.convert(model.eval(), inplace=False)
+            model.eval()
+            trainer.test(test_loader)
+
         else:
-            pruning_model(model, args.pruning_ratio, logger)
+            logger.info('Post-training quantization')
+            # model.qconfig = torch.ao.quantization.default_qconfig
+            model.qconfig = torch.ao.quantization.get_default_qconfig('x86') # per-channel quantization
 
-        check_sparsity(model, logger)
-        current_mask = extract_mask(model.state_dict())
-        remove_prune(model)
+            logger.info(model.qconfig)
+            torch.ao.quantization.prepare(model, inplace=True)
+            
+            trainer = Trainer(
+                train_loader, valid_loader, model, False, loss_fn, None, None, device, args.patience, args.epochs, result_path, logger)
+            trainer.test(train_loader) # calibrate with the training set
 
-        initialization = torch.load(os.path.join(args.dense_model, 'init.pt'))
-        model.load_state_dict(initialization)
-        prune_model_custom(model, current_mask, logger)
-        check_sparsity(model, logger)
+            mocdl = torch.ao.quantization.convert(model, inplace=False)
 
-        optimizer = optim.Adam(model.parameters(), lr=args.lr)
-        scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+            trainer = Trainer(
+                train_loader, valid_loader, model, False, loss_fn, None, None, device, args.patience, args.epochs, result_path, logger)
+            trainer.test(test_loader)
+        
+        print_size_of_model(model, logger)
 
-        trainer = Trainer(
-            train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
-        trainer.train()
-        trainer.test(test_loader) 

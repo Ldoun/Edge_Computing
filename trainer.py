@@ -2,12 +2,15 @@ import os
 import sys
 import torch
 import numpy as np
+import torch.ao.quantization
+import torch.nn.intrinsic
 
 class Trainer():
-    def __init__(self, train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, patience, epochs, result_path, fold_logger):
+    def __init__(self, train_loader, valid_loader, model, is_qat, loss_fn, optimizer, scheduler, device, patience, epochs, result_path, fold_logger):
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.model = model
+        self.is_qat = is_qat
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -25,6 +28,12 @@ class Trainer():
             loss_train, score_train = self.train_step()
             loss_val, score_val = self.valid_step()
             self.scheduler.step()
+
+            if self.is_qat:
+                if epoch > 5:
+                    self.model.apply(torch.ao.quantization.disable_observer)
+                if epoch > 3:
+                    self.model.apply(torch.nn.intrinsic.qat.freeze_bn_stats)
 
             self.logger.info(f'Epoch {str(epoch).zfill(5)}: t_loss:{loss_train:.3f} t_score:{score_train:.3f} v_loss:{loss_val:.3f} v_score:{score_val:.3f}')
 
@@ -76,7 +85,7 @@ class Trainer():
                 
         return total_loss/len(self.valid_loader.dataset), correct/len(self.valid_loader.dataset)
     
-    def test(self, test_loader):
+    def test(self, test_loader, neval_batches):
         self.model.load_state_dict(torch.load(self.best_model_path))
         self.model.eval()
         with torch.no_grad():
@@ -89,7 +98,6 @@ class Trainer():
 
                 total_loss += loss.item() * x.shape[0]
                 correct += sum(output.argmax(dim=1) == y).item() # classification task
-
 
         self.logger.info(f'Loss: {total_loss/len(test_loader.dataset)}')
         self.logger.info(f'Acc: {correct/len(test_loader.dataset)}')

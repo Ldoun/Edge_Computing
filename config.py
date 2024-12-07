@@ -13,10 +13,10 @@ def args_for_train(parser):
     parser.add_argument('--scheduler', type=str, default='cosine')
     parser.add_argument('--warmup_epochs', type=int, default=-1, help='number of warmup epoch of lr scheduler')
 
-def args_for_pruning(parser):
+def args_for_quantization(parser):
     parser.add_argument('--dense_model', type=str)
-    parser.add_argument('--prune_type', type=str, default='unstructured')
-    parser.add_argument('--pruning_ratio', type=float, default=0.98)
+    parser.add_argument('--train_dense', type=str, action='store_true')
+    parser.add_argument('--is_qat', type=str, action='store_true')
 
 def get_args():
     parser = argparse.ArgumentParser()

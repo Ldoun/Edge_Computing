@@ -27,3 +27,8 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback, logger=None):
 def save_to_json(data, file_name):
     with open(file_name, 'w') as fp:
         json.dump(data, fp)
+
+def print_size_of_model(model, logger):
+    torch.save(model.state_dict(), "temp.p")
+    logger.info('Size (MB):', os.path.getsize("temp.p")/1e6)
+    os.remove('temp.p')
