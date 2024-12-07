@@ -1,1 +1,1 @@
-- Quantization
+- Quantizatize to torch.qint8
