@@ -24,7 +24,7 @@ def get_args():
 
     args_for_data(parser)
     args_for_train(parser)
-    args_for_pruning(parser)
+    args_for_quantization(parser)
     _args, _ = parser.parse_known_args()
 
     args = parser.parse_args()
