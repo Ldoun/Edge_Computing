@@ -56,17 +56,19 @@ if __name__ == "__main__":
     model = resnet18(num_classes=100).to(device) #make model based on the model name and args
     torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
 
-    logger.info('Dense model Training')
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+    if args.pruning_ratio == 0.0:
+        logger.info('Dense model Training')
+        optimizer = optim.Adam(model.parameters(), lr=args.lr)
+        scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
-    trainer = Trainer(
-        train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
-    trainer.train()
-    trainer.test(test_loader) 
+        trainer = Trainer(
+            train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
+        trainer.train()
+        trainer.test(test_loader) 
 
-    logger.info('Sparse model Training')
-    if args.pruning_ratio != 0.0:
+    else:
+        logger.info('Sparse model Training')
+        model = model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
         check_sparsity(model, logger)
         if args.prune_type == 'structured':
             pruning_model_structured(model, args.pruning_ratio, logger)
@@ -77,15 +79,15 @@ if __name__ == "__main__":
         current_mask = extract_mask(model.state_dict())
         remove_prune(model)
 
-        initialization = torch.load(os.path.join(result_path, 'init.pt'))
+        initialization = torch.load(os.path.join(args.dense_model, 'init.pt'))
         model.load_state_dict(initialization)
         prune_model_custom(model, current_mask, logger)
         check_sparsity(model, logger)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+        optimizer = optim.Adam(model.parameters(), lr=args.lr)
+        scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
-    trainer = Trainer(
-        train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
-    trainer.train()
-    trainer.test(test_loader) 
+        trainer = Trainer(
+            train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, args.patience, args.epochs, result_path, logger)
+        trainer.train()
+        trainer.test(test_loader) 

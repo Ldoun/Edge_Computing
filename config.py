@@ -14,6 +14,7 @@ def args_for_train(parser):
     parser.add_argument('--warmup_epochs', type=int, default=-1, help='number of warmup epoch of lr scheduler')
 
 def args_for_pruning(parser):
+    parser.add_argument('--dense_model', type=str)
     parser.add_argument('--prune_type', type=str, default='unstructured')
     parser.add_argument('--pruning_ratio', type=float, default=0.98)
 
