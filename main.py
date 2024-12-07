@@ -22,7 +22,7 @@ if __name__ == "__main__":
     seed_everything(args.seed) #fix seed
     device = torch.device('cuda:0') #use cuda:0
 
-    if args.pruning_ratio == 0.0:
+    if args.train_dense:
         result_path = os.path.join(args.result_path, 'Dense'+ '_' + str(len(os.listdir(args.result_path))))
     else:   
         result_path = os.path.join(args.result_path, args.prune_type + '_' +  str(args.pruning_ratio) + '_' + str(len(os.listdir(args.result_path))))
