@@ -2,7 +2,6 @@ import os
 import sys
 import torch
 import numpy as np
-from tqdm import tqdm
 
 class Trainer():
     def __init__(self, train_loader, valid_loader, model, loss_fn, optimizer, scheduler, device, patience, epochs, result_path, fold_logger):
@@ -44,7 +43,7 @@ class Trainer():
 
         total_loss = 0
         correct = 0
-        for x, y in tqdm(self.train_loader, file=sys.stdout): #tqdm output will not be written to logger file(will only written to stdout)
+        for x, y in self.train_loader:
             x, y = x.to(self.device), y.to(self.device)
 
             self.optimizer.zero_grad()
@@ -89,5 +88,5 @@ class Trainer():
                 correct += sum(output.argmax(dim=1) == y).item() # classification task
 
 
-        print(f'Loss: {total_loss/len(test_loader.dataset)}')
-        print(f'Acc: {correct/len(test_loader.dataset)}')
+        self.logger.info(f'Loss: {total_loss/len(test_loader.dataset)}')
+        self.logger.info(f'Acc: {correct/len(test_loader.dataset)}')

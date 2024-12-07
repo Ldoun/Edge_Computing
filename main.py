@@ -30,6 +30,7 @@ if __name__ == "__main__":
     logger.info(args)
     save_to_json(vars(args), os.path.join(result_path, 'config.json'))
     sys.excepthook = partial(handle_unhandled_exception,logger=logger)
+    sys.stdout.write = logger.info
 
     # skf = StratifiedKFold(n_splits=args.cv_k, random_state=args.seed, shuffle=True).split(train_data['path'], train_data['label']) #Using StratifiedKFold for cross-validation    
     # for fold, (train_index, valid_index) in enumerate(skf): #by skf every fold will have similar label distribution
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     model = resnet18(num_classes=100).to(device) #make model based on the model name and args
     torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
 
-    print('Dense model Training')
+    logger.info('Dense model Training')
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     trainer.train()
     trainer.test(test_loader) 
 
-    print('Sparse model Training')
+    logger.info('Sparse model Training')
     if args.pruning_ratio != 0.0:
         check_sparsity(model)
         if args.prune_type == 'structured':
