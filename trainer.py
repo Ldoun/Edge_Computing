@@ -19,6 +19,7 @@ class Trainer():
     
     def train(self):
         best = np.inf
+        best_epoch = -1
         for epoch in range(1,self.epochs+1):
             self.logger.info(f'lr: {self.scheduler.get_last_lr()}')
             loss_train, score_train = self.train_step()
@@ -31,12 +32,14 @@ class Trainer():
                 best = loss_val
                 torch.save(self.model.state_dict(), self.best_model_path)
                 bad_counter = 0
+                best_epoch = epoch
 
             else:
                 bad_counter += 1
 
             if bad_counter == self.patience:
                 break
+        print(f'saved {best_epoch}-model')
 
     def train_step(self):
         self.model.train()
