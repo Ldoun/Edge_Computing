@@ -20,7 +20,7 @@ class Trainer():
     def train(self):
         best = np.inf
         for epoch in range(1,self.epochs+1):
-            print(f'lr: {self.scheduler.get_last_lr()}')
+            self.logger.info(f'lr: {self.scheduler.get_last_lr()}')
             loss_train, score_train = self.train_step()
             loss_val, score_val = self.valid_step()
             self.scheduler.step()
