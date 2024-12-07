@@ -20,8 +20,8 @@ __all__ = [
 
 
 # Pruning operation
-def pruning_model(model, px):
-    print("Apply Unstructured L1 Pruning Globally (all conv layers)")
+def pruning_model(model, px, logger):
+    logger.info("Apply Unstructured L1 Pruning Globally (all conv layers)")
     parameters_to_prune = []
     for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
@@ -35,8 +35,8 @@ def pruning_model(model, px):
     )
 
 
-def pruning_model_structured(model, px):
-    print("Apply Structured L1 Pruning Locally (all conv layers)")
+def pruning_model_structured(model, px, logger):
+    logger.info("Apply Structured L1 Pruning Locally (all conv layers)")
     # parameters_to_prune =[]
     for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
@@ -79,8 +79,8 @@ def pruning_model_random(model, px):
     )
 
 
-def prune_model_custom(model, mask_dict):
-    print("Pruning with custom mask (all conv layers)")
+def prune_model_custom(model, mask_dict, logger):
+    logger.info("Pruning with custom mask (all conv layers)")
     for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
             mask_name = name + ".weight_mask"
@@ -120,7 +120,7 @@ def reverse_mask(mask_dict):
 # Mask statistic function
 
 
-def check_sparsity(model):
+def check_sparsity(model, logger):
     sum_list = 0
     zero_sum = 0
 
@@ -131,9 +131,9 @@ def check_sparsity(model):
 
     if zero_sum:
         remain_weight_ratie = 100 * (1 - zero_sum / sum_list)
-        print("* remain weight ratio = ", 100 * (1 - zero_sum / sum_list), "%")
+        logger.info(f"* remain weight ratio = {100 * (1 - zero_sum / sum_list)}%")
     else:
-        print("no weight for calculating sparsity")
+        logger.info("no weight for calculating sparsity")
         remain_weight_ratie = None
 
     return remain_weight_ratie

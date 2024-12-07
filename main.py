@@ -30,7 +30,6 @@ if __name__ == "__main__":
     logger.info(args)
     save_to_json(vars(args), os.path.join(result_path, 'config.json'))
     sys.excepthook = partial(handle_unhandled_exception,logger=logger)
-    sys.stdout.write = logger.info
 
     # skf = StratifiedKFold(n_splits=args.cv_k, random_state=args.seed, shuffle=True).split(train_data['path'], train_data['label']) #Using StratifiedKFold for cross-validation    
     # for fold, (train_index, valid_index) in enumerate(skf): #by skf every fold will have similar label distribution
@@ -68,20 +67,20 @@ if __name__ == "__main__":
 
     logger.info('Sparse model Training')
     if args.pruning_ratio != 0.0:
-        check_sparsity(model)
+        check_sparsity(model, logger)
         if args.prune_type == 'structured':
-            pruning_model_structured(model, args.pruning_ratio)
+            pruning_model_structured(model, args.pruning_ratio, logger)
         else:
-            pruning_model(model, args.pruning_ratio)
+            pruning_model(model, args.pruning_ratio, logger)
 
-        check_sparsity(model)
+        check_sparsity(model, logger)
         current_mask = extract_mask(model.state_dict())
         remove_prune(model)
 
         initialization = torch.load(os.path.join(result_path, 'init.pt'))
         model.load_state_dict(initialization)
-        prune_model_custom(model, current_mask)
-        check_sparsity(model)
+        prune_model_custom(model, current_mask, logger)
+        check_sparsity(model, logger)
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
