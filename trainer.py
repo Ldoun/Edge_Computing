@@ -85,7 +85,7 @@ class Trainer():
                 
         return total_loss/len(self.valid_loader.dataset), correct/len(self.valid_loader.dataset)
     
-    def test(self, test_loader, neval_batches):
+    def test(self, test_loader):
         self.model.load_state_dict(torch.load(self.best_model_path))
         self.model.eval()
         with torch.no_grad():
