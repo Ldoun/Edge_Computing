@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
             logger.info(model.qconfig)
             torch.ao.quantization.prepare(model, inplace=True)
-            test(model, train_loader, 'cpu', logger) # calibrate with the training set
+            test(model, train_loader, 'cpu', logger, early_stop=32) # calibrate with the training set
 
             model = torch.ao.quantization.convert(model, inplace=False)
             test(model, test_loader, 'cpu', logger)

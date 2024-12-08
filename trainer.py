@@ -103,13 +103,17 @@ class Trainer():
         self.logger.info(f'Acc: {correct/len(test_loader.dataset)}')
 
 
-def test(model, test_loader, device, logger):
+def test(model, test_loader, device, logger, early_stop=-1):
     model.eval()
     with torch.no_grad():
         correct = 0
-        for x, y in test_loader:
+        for i, (x, y) in enumerate(test_loader):
             x, y = x.to(device), y.to(device)
             output = model(x)
             correct += sum(output.argmax(dim=1) == y).item() # classification task
+
+            if early_stop == i:
+                logger.info('calibration data. Early stopped')
+                return
 
     logger.info(f'Acc: {correct/len(test_loader.dataset)}')
