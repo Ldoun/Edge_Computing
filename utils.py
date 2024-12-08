@@ -30,5 +30,5 @@ def save_to_json(data, file_name):
 
 def print_size_of_model(model, logger):
     torch.save(model.state_dict(), "temp.p")
-    logger.info('Size (MB):', os.path.getsize("temp.p")/1e6)
+    logger.info(f'Size (MB): {os.path.getsize("temp.p")/1e6}')
     os.remove('temp.p')
