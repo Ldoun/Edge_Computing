@@ -81,7 +81,7 @@ if __name__ == "__main__":
             model.fuse_model(is_qat=True)
             logger.info('Quantization aware training')
 
-            optimizer = optim.Adam(model.parameters(), lr=args.lr)
+            optimizer = optim.SGD(model.parameters(), lr=args.lr)
             scheduler = get_sch(args.scheduler, optimizer, epochs=100)
 
             # model.qconfig = torch.ao.quantization.default_qconfig
