@@ -72,8 +72,10 @@ if __name__ == "__main__":
     else:
         model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
         model.eval()
+        model.cuda()
+        logger.info('Before Quantization')
+        test(model, test_loader, 'cuda', logger)
 
-        
         if args.is_qat:
             model.train()
             model.fuse_model(is_qat=True)
