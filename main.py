@@ -82,14 +82,14 @@ if __name__ == "__main__":
             logger.info('Quantization aware training')
 
             optimizer = optim.Adam(model.parameters(), lr=args.lr)
-            scheduler = get_sch(args.scheduler, optimizer, epochs=args.epochs)
+            scheduler = get_sch(args.scheduler, optimizer, epochs=100)
 
             # model.qconfig = torch.ao.quantization.default_qconfig
             model.qconfig = torch.ao.quantization.get_default_qat_qconfig('x86') # per-channel quantization
             torch.ao.quantization.prepare_qat(model, inplace=True)
 
             trainer = Trainer(
-                train_loader, valid_loader, model, True, loss_fn, optimizer, scheduler, device, args.patience, 10, result_path, logger)
+                train_loader, valid_loader, model, True, loss_fn, optimizer, scheduler, device, args.patience, 100, result_path, logger)
             trainer.train()
 
             model.cpu()
