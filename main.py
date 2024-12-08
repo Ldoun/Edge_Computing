@@ -70,7 +70,7 @@ if __name__ == "__main__":
         trainer.test(test_loader) 
 
     else:
-        model = model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
+        model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
         model.eval()
         model.fuse_model()
 
