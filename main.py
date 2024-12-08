@@ -90,11 +90,12 @@ if __name__ == "__main__":
                 train_loader, valid_loader, model, True, loss_fn, optimizer, scheduler, device, args.patience, 10, result_path, logger)
             trainer.train()
 
+            model.cpu()
             model = torch.ao.quantization.convert(model.eval(), inplace=False)
-            model.eval()
             trainer.test(test_loader)
 
         else:
+            model.cpu()
             model.fuse_model()
             logger.info('Post-training quantization')
             # model.qconfig = torch.ao.quantization.default_qconfig
