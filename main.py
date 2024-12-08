@@ -25,7 +25,7 @@ if __name__ == "__main__":
     if args.train_dense:
         result_path = os.path.join(args.result_path, 'Dense'+ '_' + str(len(os.listdir(args.result_path))))
     else:   
-        result_path = os.path.join(args.result_path, 'is_qat=' + args.is_qat  + '_' + str(len(os.listdir(args.result_path))))
+        result_path = os.path.join(args.result_path, 'is_qat=' + str(args.is_qat)  + '_' + str(len(os.listdir(args.result_path))))
     os.makedirs(result_path)
     
     logging.basicConfig(level=logging.INFO, format='%(message)s')
