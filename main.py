@@ -76,6 +76,7 @@ if __name__ == "__main__":
 
         
         if args.is_qat:
+            model.train()
             logger.info('Quantization aware training')
 
             optimizer = optim.Adam(model.parameters(), lr=args.lr)
