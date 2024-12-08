@@ -9,7 +9,7 @@ from torch import optim, nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-from data import Cifar100, Subset
+from data import Cifar10, Subset
 from trainer import Trainer
 from config import get_args
 from lr_scheduler import get_sch
@@ -37,13 +37,13 @@ if __name__ == "__main__":
     # skf = StratifiedKFold(n_splits=args.cv_k, random_state=args.seed, shuffle=True).split(train_data['path'], train_data['label']) #Using StratifiedKFold for cross-validation    
     # for fold, (train_index, valid_index) in enumerate(skf): #by skf every fold will have similar label distribution
 
-    dataset = Cifar100(args.path, train=True, augment=True, download=True)
-    dataset_no_augment = Cifar100(args.path, train=True, augment=False, download=True)
+    dataset = Cifar10(args.path, train=True, augment=True, download=True)
+    dataset_no_augment = Cifar10(args.path, train=True, augment=False, download=True)
     train_index, valid_index = train_test_split(range(len(dataset)), test_size=0.3, random_state=1)
 
     train_dataset = Subset(dataset, train_index)
     valid_dataset = Subset(dataset_no_augment, valid_index)
-    test_dataset = Cifar100(args.path, train=False, augment=False, download=False)
+    test_dataset = Cifar10(args.path, train=False, augment=False, download=False)
 
     loss_fn = nn.CrossEntropyLoss()
     train_loader = DataLoader(
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
     
-    model = resnet18(num_classes=100).to(device) #make model based on the model name and args
+    model = resnet18(num_classes=10).to(device) #make model based on the model name and args
     torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
 
     if args.pruning_ratio == 0.0:
