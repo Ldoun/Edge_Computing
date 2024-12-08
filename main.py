@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     else:
         logger.info('Sparse model Training')
-        model = model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
+        model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
         check_sparsity(model, logger)
         if args.prune_type == 'structured':
             pruning_model_structured(model, args.pruning_ratio, logger)
