@@ -21,7 +21,7 @@ class Trainer():
         self.best_model_path = os.path.join(result_path, 'best_model.pt')
     
     def train(self):
-        best = np.inf
+        best = 0
         best_epoch = -1
         for epoch in range(1,self.epochs+1):
             self.logger.info(f'lr: {self.scheduler.get_last_lr()}')
@@ -37,8 +37,8 @@ class Trainer():
 
             self.logger.info(f'Epoch {str(epoch).zfill(5)}: t_loss:{loss_train:.3f} t_score:{score_train:.3f} v_loss:{loss_val:.3f} v_score:{score_val:.3f}')
 
-            if loss_val < best:
-                best = loss_val
+            if score_val > best:
+                best = score_val
                 torch.save(self.model.state_dict(), self.best_model_path)
                 bad_counter = 0
                 best_epoch = epoch
