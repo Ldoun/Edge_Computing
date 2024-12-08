@@ -57,7 +57,7 @@ if __name__ == "__main__":
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
     
-    model = resnet18(num_classes=100).to(device)
+    model = resnet18(num_classes=10).to(device)
 
     if args.train_dense:
         logger.info('Dense model Training')
