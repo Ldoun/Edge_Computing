@@ -56,7 +56,7 @@ if __name__ == "__main__":
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
     
-    model = resnet18(num_classes=100).to(device) #make model based on the model name and args
+    model = resnet18(num_classes=10).to(device) #make model based on the model name and args
     torch.save(model.state_dict(), os.path.join(result_path, 'init.pt'))
 
     if args.pruning_ratio == 0.0:
