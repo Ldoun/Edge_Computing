@@ -72,11 +72,11 @@ if __name__ == "__main__":
     else:
         model.load_state_dict(torch.load(os.path.join(args.dense_model, 'best_model.pt')))
         model.eval()
-        model.fuse_model()
 
         
         if args.is_qat:
             model.train()
+            model.fuse_model(is_qat=True)
             logger.info('Quantization aware training')
 
             optimizer = optim.Adam(model.parameters(), lr=args.lr)
@@ -95,6 +95,7 @@ if __name__ == "__main__":
             trainer.test(test_loader)
 
         else:
+            model.fuse_model()
             logger.info('Post-training quantization')
             # model.qconfig = torch.ao.quantization.default_qconfig
             model.qconfig = torch.ao.quantization.get_default_qconfig('x86') # per-channel quantization
