@@ -16,6 +16,7 @@ class Trainer():
         self.epochs = epochs
         self.logger = fold_logger
         self.best_model_path = os.path.join(result_path, 'best_model.pt')
+        self.result_path = result_path
     
     def train(self):
         best = np.inf
@@ -40,6 +41,7 @@ class Trainer():
             if bad_counter == self.patience:
                 break
         print(f'saved {best_epoch}-model')
+        torch.save(self.model.state_dict(), os.path.join(self.result_path, 'last_model.pt'))
 
     def train_step(self):
         self.model.train()
