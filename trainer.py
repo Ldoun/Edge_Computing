@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import torch
 import numpy as np
 import torch.ao.quantization
@@ -105,6 +106,7 @@ class Trainer():
 
 def test(model, test_loader, device, logger, early_stop=-1):
     model.eval()
+    start = time.time()
     with torch.no_grad():
         correct = 0
         for i, (x, y) in enumerate(test_loader):
@@ -115,5 +117,6 @@ def test(model, test_loader, device, logger, early_stop=-1):
             if early_stop == i:
                 logger.info('calibration data. Early stopped')
                 return
-
+    end = time.time()
     logger.info(f'Acc: {correct/len(test_loader.dataset)}')
+    logger.info(f'Time: {end - start}')
