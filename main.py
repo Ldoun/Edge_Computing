@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.models.quantization import resnet18
 
 from data import Cifar10, Subset
-from trainer import Trainer
+from trainer import Trainer, test
 from config import get_args
 from lr_scheduler import get_sch
 from utils import seed_everything, handle_unhandled_exception, save_to_json, print_size_of_model
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
             model.cpu()
             model = torch.ao.quantization.convert(model.eval(), inplace=False)
-            trainer.test(test_loader)
+            test(model, test_loader, 'cpu', logger)
 
         else:
             model.cpu()
@@ -103,16 +103,10 @@ if __name__ == "__main__":
 
             logger.info(model.qconfig)
             torch.ao.quantization.prepare(model, inplace=True)
-            
-            trainer = Trainer(
-                train_loader, valid_loader, model, False, loss_fn, None, None, device, args.patience, args.epochs, result_path, logger)
-            trainer.test(train_loader) # calibrate with the training set
+            test(model, train_loader, 'cpu', logger) # calibrate with the training set
 
-            mocdl = torch.ao.quantization.convert(model, inplace=False)
-
-            trainer = Trainer(
-                train_loader, valid_loader, model, False, loss_fn, None, None, device, args.patience, args.epochs, result_path, logger)
-            trainer.test(test_loader)
+            model = torch.ao.quantization.convert(model, inplace=False)
+            test(model, test_loader, 'cpu', logger)
         
         print_size_of_model(model, logger)
 
