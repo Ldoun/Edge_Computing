@@ -77,6 +77,8 @@ if __name__ == "__main__":
         test(model, test_loader, 'cuda', logger)
 
         if args.is_qat:
+            from torch.ao.quantization import QConfig, default_per_channel_weight_fake_quant, default_weight_fake_quant, FakeQuantize, MovingAverageMinMaxObserver
+
             model.train()
             model.fuse_model(is_qat=True)
             logger.info('Quantization aware training')
@@ -85,7 +87,16 @@ if __name__ == "__main__":
             scheduler = get_sch(args.scheduler, optimizer, epochs=100)
 
             # model.qconfig = torch.ao.quantization.default_qconfig
-            model.qconfig = torch.ao.quantization.get_default_qat_qconfig('x86') # per-channel quantization
+            qconfig = QConfig(
+                activation=FakeQuantize.with_args(
+                    observer=MovingAverageMinMaxObserver,
+                    quant_min=0,
+                    quant_max=255,
+                    reduce_range=True,
+                ),
+                weight=default_per_channel_weight_fake_quant if args.ch_quantize else default_weight_fake_quant,
+            )
+            model.qconfig = qconfig
             torch.ao.quantization.prepare_qat(model, inplace=True)
 
             trainer = Trainer(
@@ -97,11 +108,19 @@ if __name__ == "__main__":
             test(model, test_loader, 'cpu', logger)
 
         else:
+            from torch.ao.quantization import QConfig, default_per_channel_weight_observer, default_weight_observer, HistogramObserver
+
             model.cpu()
             model.fuse_model()
             logger.info('Post-training quantization')
             # model.qconfig = torch.ao.quantization.default_qconfig
-            model.qconfig = torch.ao.quantization.get_default_qconfig('x86') # per-channel quantization
+            
+            qconfig = qconfig = QConfig(
+                activation=HistogramObserver.with_args(reduce_range=True),
+                weight=default_per_channel_weight_observer if args.ch_quantize else default_weight_observer,
+                # weight=default_weight_observer,
+            )
+            model.qconfig = qconfig
 
             logger.info(model.qconfig)
             torch.ao.quantization.prepare(model, inplace=True)

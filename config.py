@@ -17,6 +17,7 @@ def args_for_quantization(parser):
     parser.add_argument('--dense_model', type=str)
     parser.add_argument('--train_dense', action='store_true')
     parser.add_argument('--is_qat', action='store_true')
+    parser.add_argument('--ch_quantize', action='store_true')
 
 def get_args():
     parser = argparse.ArgumentParser()
